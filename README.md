@@ -12,4 +12,12 @@
 - AI model translation layer working with text in and return text out
 - Chatbot layer wrap text into telegram
 
+## What you should have to run:
+- Library: tensor2tensor + tensorflow matplotlib --> For training and decode AI data
+- Library: python-telegram-bot --> API of telegram-bot
+- Library: sh --> Running t2t as bash shell scipt wrapping on python
+
+## Data model for running AI translator
+- You should as in issue if want or read code and try to regenerate it (hint: basic following tensor2tensor introduction)
+
 ### update at 2019-03-10
