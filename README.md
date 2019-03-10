@@ -6,7 +6,7 @@
 ## This chatbot should have purpose:
 - Translating english to vietnamese
 - Using tensor2tensor as AI translate
-- Optimal code as mush as possible
+- Simplest code as mush as possible
 
 ## There should be 2 layers:
 - AI model translation layer working with text in and return text out
