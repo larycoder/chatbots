@@ -5,7 +5,7 @@ Token = file.read()
 CallBot = "No"
 AskBot = "No"
 BotAsk = "No"
-Chat_id = ""
+Chat_id = NULL
 
 from telegram.ext import Updater,CommandHandler,MessageHandler,Filters
 from Translator import translatorAI
@@ -53,43 +53,49 @@ def sendMessage(bot,update):
   String = update.message.text
   List = String.split(' ')
 
-  # state 1: bot ask usr for conversation
-  if CallBot == "No" and AskBot == "No" and BotAsk == "No":
-    for name in List:
-      if name == "@ronet20190310_bot":
-        Chat_id = update.message.chat_id
-        bot.sendMessage(Chat_id,"Do you call me ?")
-        BotAsk = "Yes"
-        return
-    bot.sendMessage(Chat_id,"This conversation close")
-    BotAsk = CallBot = AskBot = "No"
+  # Try to make bot deploy on single conversation
+  if Chat_id == update.message.chat_id or Chat_id == NULL
 
-  # state 2: usr confirm conversation
-  elif BotAsk == "Yes" and CallBot == "No" and AskBot == "No":
-    for name in List:
-      if name == "yes" or name == "Yes":
-        bot.sendMessage(Chat_id,"What do you want ?")
-        CallBot = "Yes"
-        return
-    bot.sendMessage(Chat_id,"This conversation close")
-    BotAsk = CallBot = AskBot = "No"
+    # state 1: bot ask usr for conversation
+    if CallBot == "No" and AskBot == "No" and BotAsk == "No":
+      for name in List:
+        if name == "@ronet20190310_bot":
+          Chat_id = update.message.chat_id
+          bot.sendMessage(Chat_id,"Do you call me ?")
+          BotAsk = "Yes"
+          return
+      bot.sendMessage(Chat_id,"This conversation close")
+      BotAsk = CallBot = AskBot = "No"
 
-  # state 3: usr ask bot for function
-  elif BotAsk == "Yes" and CallBot == "Yes" and AskBot == "No":
-    for name in List:
-      if name == "translate" or name == "Translate":
-        bot.sendMessage(Chat_id,"Enter text you want to translate !")
-        AskBot = "Yes"
-        return
-    bot.sendMessage(Chat_id,"This feature not yet update on me, sorry\n This conversation close")   
-    BotAsk = CallBot = AskBot ="No"
+    # state 2: usr confirm conversation
+    elif BotAsk == "Yes" and CallBot == "No" and AskBot == "No":
+      for name in List:
+        if name == "yes" or name == "Yes":
+          bot.sendMessage(Chat_id,"What do you want ?")
+          CallBot = "Yes"
+          return
+      bot.sendMessage(Chat_id,"This conversation close")
+      BotAsk = CallBot = AskBot = "No"
 
-  # state 4: bot answer usr
-  elif BotAsk == "Yes" and CallBot == "Yes" and AskBot == "Yes":
-    bot.sendMessage(Chat_id,"Please waiting for translation ...")
-    bot.sendMessage(Chat_id,translatorAI(String))
-    bot.sendMessage(Chat_id,"This conversation close")
-    BotAsk = CallBot = AskBot = "No"
+    # state 3: usr ask bot for function
+    elif BotAsk == "Yes" and CallBot == "Yes" and AskBot == "No":
+      for name in List:
+        if name == "translate" or name == "Translate":
+          bot.sendMessage(Chat_id,"Enter text you want to translate !")
+          AskBot = "Yes"
+          return
+      bot.sendMessage(Chat_id,"This feature not yet update on me, sorry\n This conversation close")   
+      BotAsk = CallBot = AskBot ="No"
+
+    # state 4: bot answer usr
+    elif BotAsk == "Yes" and CallBot == "Yes" and AskBot == "Yes":
+      bot.sendMessage(Chat_id,"Please waiting for translation ...")
+      bot.sendMessage(Chat_id,translatorAI(String))
+      bot.sendMessage(Chat_id,"This conversation close")
+      BotAsk = CallBot = AskBot = "No"
+
+  else:
+    bot.sendMessage(update.message.chat_id,"Bot is busy now")
   
 # Main runnning function
 if __name__ == '__main__':
