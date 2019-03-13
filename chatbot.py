@@ -5,7 +5,7 @@ Token = file.read()
 CallBot = "No"
 AskBot = "No"
 BotAsk = "No"
-Chat_id = NULL
+Chat_id = None
 
 from telegram.ext import Updater,CommandHandler,MessageHandler,Filters
 from Translator import translatorAI
@@ -54,7 +54,7 @@ def sendMessage(bot,update):
   List = String.split(' ')
 
   # Try to make bot deploy on single conversation
-  if Chat_id == update.message.chat_id or Chat_id == NULL
+  if Chat_id == update.message.chat_id or Chat_id is None:
 
     # state 1: bot ask usr for conversation
     if CallBot == "No" and AskBot == "No" and BotAsk == "No":
@@ -66,6 +66,7 @@ def sendMessage(bot,update):
           return
       bot.sendMessage(Chat_id,"This conversation close")
       BotAsk = CallBot = AskBot = "No"
+      Chat_id = None
 
     # state 2: usr confirm conversation
     elif BotAsk == "Yes" and CallBot == "No" and AskBot == "No":
@@ -76,6 +77,7 @@ def sendMessage(bot,update):
           return
       bot.sendMessage(Chat_id,"This conversation close")
       BotAsk = CallBot = AskBot = "No"
+      Chat_id = None
 
     # state 3: usr ask bot for function
     elif BotAsk == "Yes" and CallBot == "Yes" and AskBot == "No":
@@ -86,6 +88,7 @@ def sendMessage(bot,update):
           return
       bot.sendMessage(Chat_id,"This feature not yet update on me, sorry\n This conversation close")   
       BotAsk = CallBot = AskBot ="No"
+      Chat_id = None
 
     # state 4: bot answer usr
     elif BotAsk == "Yes" and CallBot == "Yes" and AskBot == "Yes":
@@ -93,6 +96,7 @@ def sendMessage(bot,update):
       bot.sendMessage(Chat_id,translatorAI(String))
       bot.sendMessage(Chat_id,"This conversation close")
       BotAsk = CallBot = AskBot = "No"
+      Chat_id = None
 
   else:
     bot.sendMessage(update.message.chat_id,"Bot is busy now")
