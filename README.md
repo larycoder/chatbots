@@ -29,4 +29,6 @@
 ## Data model for running AI translator
 - You should as in issue if want or read code and try to regenerate it (hint: basic following tensor2tensor introduction)
 
-### update at 2019-03-12
+## Reference: https://chatbotslife.com/your-first-chatbot-using-telegram-and-python-part-1-796894016ba8
+
+### update at 2019-03-19
