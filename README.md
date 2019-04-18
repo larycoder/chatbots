@@ -1,18 +1,17 @@
-# chatbots
+# Chatbots
+This is part of AI project try to deplay [tensor2tensor](https://github.com/tensorflow/tensor2tensor) on insert punctuations for text. To build simple environment for deploy t2t model on reality, the telegram chatbot was design as the easiest solution.
 
-## What i want to do:
-- I try to build easiest chatbot on telegram depending on telegram supported API
+## Philosophy of design
+Simplest code as mush as possible and portable.
 
-## This chatbot should have purpose:
-- Translating english to vietnamese
-- Using tensor2tensor as AI translate
-- Simplest code as mush as possible
+## Quick start 
+You can easy build simple program (**chatBot**) to take and send text with Telegram server through [Telgegram API](https://core.telegram.org/) and python. Then you can build model t2t to handle text retrieve by Bot.
 
-## There should be 2 layers:
-- AI model translation layer working with text in and return text out
-- Chatbot layer wrap text into telegram
+### Get token for Bot on telegram
+Before building your own chatBot on [telegram](https://telegram.org/), you need to register for your Bot. It can be finish by following some steps:
+1. Open telegram, search for [@BotFather](https://telegram.me/BotFather) and start a chat
+2. Type `/newbot` and following instruction 
 
-## How to build your own translate chatbot:
 - Go to botFather on telegram and following guide to create new chatbot
 - Take token chatbot return for you and put it in Telegram_chatbot_token.txt
 - Runing chatbot.py on your server
