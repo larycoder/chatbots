@@ -153,7 +153,7 @@ return output
 ```
 That is all of this small project
 
-### This is only a part of more huge project and final purpose of project is can insert punctuation to text. So we try to modify translator model of t2t to reach our target. If you have some interesting in it, feel free to see more in [here](https://github.com/linhhonblade/try-tensor2tensor/tree/master/custom_data)...
+This is only a part of more huge project and final purpose of project is can insert punctuation to text. So we try to modify translator model of t2t to reach our target. If you have some interesting in it, feel free to see more in [here](https://github.com/linhhonblade/try-tensor2tensor/tree/master/custom_data)...
 
 
 
