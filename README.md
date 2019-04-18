@@ -1,6 +1,8 @@
 # Chatbots
 This is part of AI project try to deplay [tensor2tensor](https://github.com/tensorflow/tensor2tensor) on insert punctuations for text. To build simple environment for deploy t2t model on reality, the telegram chatbot was design as the easiest solution.
 
+I following [this](https://chatbotslife.com/your-first-chatbot-using-telegram-and-python-part-1-796894016ba8) reference as a guider for first time working with telegram chatBot
+
 ## Philosophy of design
 Simplest code as mush as possible and portable.
 
@@ -46,7 +48,7 @@ Define function to handle specific kind of update.
 def start(bot, update):
   update.message.reply_text("Hi, I am translator bot !")
 ```
-For t2t translator model, I built simple [translator code]() to retrieve text from var `string` and reply translated message.
+For t2t translator model, I built simple [translator code](#translater) to retrieve text from var `string` and reply translated message.
 ```
 from Translator import translatorAI
 def translate(bot,update):
@@ -71,23 +73,90 @@ There are a lot of handler, depending on your purpose you can choose between ***
 
 In here, I dont mention about MessageHandler because it is unnecessary for our purpose, but you  can find out more information in [here](https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.messagehandler.html)
 
+### Deploy simple t2t model translator for retrieve and handle message <a name="translater"></a>
+So, this is part where you can deploy your AI model on handle information and testing model. With this version, I build simple [code](https://github.com/larycoder/chatbots/blob/master/Translator.py) for working directly with [tensor2tensor](https://github.com/tensorflow/tensor2tensor)
+
+First time working with tensor2tensor, I realize that it is complicate to wrap t2t into python code. So, I make some very cheating thing. Because when run t2t, you run directly into bash shell like:
+
+For installing necessary lib of t2t
+```
+# Assumes tensorflow or tensorflow-gpu installed
+pip install tensor2tensor
+
+# Installs with tensorflow-gpu requirement
+pip install tensor2tensor[tensorflow_gpu]
+
+# Installs with tensorflow (cpu) requirement
+pip install tensor2tensor[tensorflow]
+```
+And generate data
+```
+t2t-datagen \
+  --data_dir=colab/data \
+  --tmp_dir=colab/tmp \
+  --problem=translate_envi_iwslt32k
+```
+Then training
+```
+t2t-trainer \
+  --data_dir=colab/data \
+  --problem=translate_envi_iwslt32k \
+  --model=transformer \
+  --hparams_set=transformer_base \
+  --output_dir=colab/train \
+  --train_steps=100000 \
+  --eval_steps=100
+```
+And decode
+```
+t2t-decoder \
+  --data_dir=colab/data \
+  --problem=translate_envi_iwslt32k \
+  --model=transformer \
+  --hparams_set=transformer_base \
+  --output_dir=colab/train \
+  --decode_hparams="beam_size=4,alpha=0.6" \
+  --decode_from_file=colab/en.txt \
+  --decode_to_file=colab/translation.txt
+```
+As you can see, all this job can be easy to finish in bash shell and t2t model will read content from colab/en.txt then translate it into colab/translation.txt
+
+Boom!! New idea is apper in my head that is instead of wrap t2t model into python (***VERY*** complicated) I just need to warp bash shell into python (more easier)
+
+So now, let go deep into implementing this idea
+
+First, you need some library to wrap bash shell (***sh***) into python and that is [sh](https://amoffat.github.io/sh/)
+```
+import sh
+```
+Now, you need to define a function to get message in
+```
+def translatorAI(String):
+```
+In this function, you will want to push string need to translate into colab/en.txt file
+```
+ file = open("colab/en.txt","w")
+  file.write(String)
+  file.close()
+```
+Then, you running 1 [sript.sh](https://github.com/larycoder/chatbots/blob/master/translate-script.sh) for running t2t in python as in bash shell
+```
+sh.sh("translate-script.sh")
+```
+Finally, translated string will be put in colab/translation.txt, so you need to get string from that file in return to bot. ***SIMPLE!!!***
+```
+file = open("colab/translation.txt","r")
+  output = file.read()
+  file.close()
+
+return output
+```
+That is all of this small project
+
+### This is only a part of more huge project and final purpose of project is can insert punctuation to text. So we try to modify translator model of t2t to reach our target. If you have some interesting in it, feel free to see more in [here](https://github.com/linhhonblade/try-tensor2tensor/tree/master/custom_data)...
 
 
 
 
-
-
-
-
-## What you should have to build your own translate chatbot:
-- Library: tensor2tensor + tensorflow matplotlib --> For training and decode AI data
-- Library: python-telegram-bot --> API of telegram-bot
-- Library: sh --> Running t2t as bash shell scipt wrapping on python
-
-## Data model for running AI translator
-- You should as in issue if want or read code and try to regenerate it (hint: basic following tensor2tensor introduction)
-
-## Reference: 
-- Here is my guider when I build chatbot at the first times: https://chatbotslife.com/your-first-chatbot-using-telegram-and-python-part-1-796894016ba8
 
 ### update at 2019-03-19
