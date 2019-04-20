@@ -73,6 +73,16 @@ There are a lot of handler, depending on your purpose you can choose between ***
 
 In here, I dont mention about MessageHandler because it is unnecessary for our purpose, but you  can find out more information in [here](https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.messagehandler.html)
 
+Finally, after setup the bot, you need to start it 
+```
+updater.start_polling()
+```
+Then shut down bot after finishing test
+```
+updater.idle()
+```
+This code will finishing bot when you type ctrl+C on terminal where you run program
+
 ### Deploy simple t2t model translator for retrieve and handle message <a name="translater"></a>
 So, this is part where you can deploy your AI model on handle information and testing model. With this version, I build simple [code](https://github.com/larycoder/chatbots/blob/master/Translator.py) for working directly with [tensor2tensor](https://github.com/tensorflow/tensor2tensor)
 
