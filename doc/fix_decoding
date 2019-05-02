@@ -1,0 +1,16 @@
+# test for running serving t2t without create server
+    input_string = ""
+    import time
+    try:
+      while True:
+        file = open("colab/en.txt","r")
+        check = file.readline()
+        if (check == "true\n"):
+          input_string = file.readline()
+          file.close()
+          break
+        file.close()
+        print("checking code running: ",check)
+        time.sleep(2)
+    except Exception:
+      pass
