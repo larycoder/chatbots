@@ -23,7 +23,7 @@ from __future__ import print_function
 # define prefix parameter:
 data_dir = "colab/data"
 Problem = "translate_envi_iwslt32k"
-model = "transformer"
+Model = "transformer"
 hparams_set = "transformer_base"
 output_dir = "colab/train"
 decode_hparams = "beam_size=4,alpha=0.6"
@@ -71,6 +71,7 @@ FLAGS.data_dir = data_dir
 FLAGS.hparams_set = hparams_set
 FLAGS.problem = Problem
 FLAGS.decode_hparams = decode_hparams
+FLAGS.model = Model
 
 create_hparams = t2t_decoder.create_hparams
 create_decode_hparams = t2t_decoder.create_decode_hparams
@@ -138,7 +139,7 @@ def usr_define_decode_from_file(estimator, hparams, decode_hp, checkpoint_path=N
     gen_fn = make_input_fn_from_generator(
       _takeValueFromFile_input_fn(hparams,decode_hp))
     example = gen_fn()
-    example = example = _interactive_input_tensor_to_features_dict(example, hparams)
+    example = _interactive_input_tensor_to_features_dict(example, hparams)
     return example
 
   result_iter = estimator.predict(input_fn, checkpoint_path=checkpoint_path)
@@ -167,17 +168,60 @@ def decode_model():
   decode_hp = create_decode_hparams()
   
   estimator = trainer_lib.create_estimator(
-    model,
+    FLAGS.model,
     hp,
     t2t_trainer.create_run_config(hp),
     decode_hparams=decode_hp,
     use_tpu=FLAGS.use_tpu)
   usr_define_decode_from_file(estimator, hp, decode_hp)
+
+# model decoder object: keeping model and decode message of user as fast as possible
+class model_decoder():
+  hp = None
+  decode_hp = None
+  model = None
+
+  # building model when obj is created
+  def __init__(self):
+
+    tf.logging.set_verbosity(tf.logging.INFO)
+    trainer_lib.set_random_seed(FLAGS.random_seed)
+    usr_dir.import_usr_dir(FLAGS.t2t_usr_dir)
+
+    # store hparam and model and keep it alive during running time
+    self.hp = create_hparams()
+    self.decode_hp = create_decode_hparams()
+    self.model = self.setModel()
+    # we dont support TPU in here
+    if self.model.config.use_tpu:
+      raise ValueError("TPU is not support in here.")
+
+  # method setting model decode for loading
+  def setModel(self):
+    return trainer_lib.create_estimator(FLAGS.model, 
+                                        self.hp,
+                                        t2t_trainer.create_run_config(self.hp), 
+                                        decode_hparams = self.decode_hp, 
+                                        use_tpu = FLAGS.use_tpu)
+
   
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 def main(_):
-  decode_model()
+  obj = model_decoder()
+  input("enter to continue")
 
 if __name__ == "__main__":
   tf.logging.set_verbosity(tf.logging.INFO)
