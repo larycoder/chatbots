@@ -28,6 +28,8 @@ hparams_set = "transformer_base"
 output_dir = "colab/train"
 decode_hparams = "beam_size=4,alpha=0.6"
 message_dir = "colab/en.txt" # file where serving model will read translate needed message
+input_string = "" # do not modify this value
+State_of_model = "" # do not modify this value
 
 import os
 import collections
@@ -37,6 +39,7 @@ import string
 import time
 
 from tensor2tensor.bin import t2t_trainer
+from tensor2tensor.bin import t2t_decoder
 
 import numpy as np
 import six
@@ -64,29 +67,13 @@ flags = tf.flags
 FLAGS = flags.FLAGS
 
 FLAGS.output_dir = output_dir
+FLAGS.data_dir = data_dir
+FLAGS.hparams_set = hparams_set
+FLAGS.problem = Problem
+FLAGS.decode_hparams = decode_hparams
 
-flags.DEFINE_string("checkpoint_path", None,
-                    "Path to the model checkpoint. Overrides output_dir.")
-flags.DEFINE_integer("decode_shards", 1, "Number of decoding replicas.")
-flags.DEFINE_bool("decode_in_memory", False, "Decode in memory.")
-
-def create_hparams():
-  
-  return trainer_lib.create_hparams(
-      hparams_set,
-      FLAGS.hparams,
-      data_dir=os.path.expanduser(data_dir),
-      problem_name=Problem)
-
-def create_decode_hparams():
-  decode_hp = decoding.decode_hparams(decode_hparams)
-  decode_hp.shards = FLAGS.decode_shards
-  decode_hp.shard_id = FLAGS.worker_id
-  decode_in_memory = FLAGS.decode_in_memory or decode_hp.decode_in_memory
-  decode_hp.decode_in_memory = decode_in_memory
-  decode_hp.decode_to_file = FLAGS.decode_to_file
-  decode_hp.decode_reference = FLAGS.decode_reference
-  return decode_hp
+create_hparams = t2t_decoder.create_hparams
+create_decode_hparams = t2t_decoder.create_decode_hparams
 
 
 def decode(estimator, hparams, decode_hp):
@@ -113,16 +100,16 @@ def usr_define_decode_from_file(estimator, hparams, decode_hp, checkpoint_path=N
       try:
         while True:
           file = open(message_dir,"r")
-          check = file.readline()
-          if (check == "true\n"):
+          State_of_model = file.readline()
+          if (State_of_model == "true\n"):
             input_string = file.readline()
             file.close()
             break
-          elif (check == "false\n"):
+          elif (State_of_model == "false\n"):
             file.close()
             return
           file.close()
-          print("checking code running: ",check)
+          print("checking code running: ",State_of_model)
           time.sleep(2)
       except Exception:
         pass
@@ -143,10 +130,8 @@ def usr_define_decode_from_file(estimator, hparams, decode_hp, checkpoint_path=N
       yield features
 
   is_image = "image" in hparams.problem.name
-  is_text2class = isinstance(hparams.problem,
-                             text_problems.Text2ClassProblem)
-  skip_eos_postprocess = (
-      is_image or is_text2class or decode_hp.skip_eos_postprocess)
+  is_text2class = isinstance(hparams.problem, text_problems.Text2ClassProblem)
+  skip_eos_postprocess = (is_image or is_text2class or decode_hp.skip_eos_postprocess)
 
 
   def input_fn():
@@ -164,11 +149,16 @@ def usr_define_decode_from_file(estimator, hparams, decode_hp, checkpoint_path=N
     else:
       translated_word = targets_vocab.decode(_save_until_eos(result["outputs"], skip_eos_postprocess))
       tf.logging.info(translated_word)
-      print("can be pass out: ",translated_word)
+      try:
+        file = open("colab/en.txt","w")
+        file.write("OK\n"+translated_word)
+        file.close()
+      except Exception:
+        pass
 
 
 
-def main(_):
+def decode_model():
   tf.logging.set_verbosity(tf.logging.INFO)
   trainer_lib.set_random_seed(FLAGS.random_seed)
   usr_dir.import_usr_dir(FLAGS.t2t_usr_dir)
@@ -182,8 +172,12 @@ def main(_):
     t2t_trainer.create_run_config(hp),
     decode_hparams=decode_hp,
     use_tpu=FLAGS.use_tpu)
-  
   usr_define_decode_from_file(estimator, hp, decode_hp)
+  
+
+
+def main(_):
+  decode_model()
 
 if __name__ == "__main__":
   tf.logging.set_verbosity(tf.logging.INFO)
