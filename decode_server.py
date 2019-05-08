@@ -177,9 +177,6 @@ def decode_model():
 
 # model decoder object: keeping model and decode message of user as fast as possible
 class model_decoder():
-  hp = None
-  decode_hp = None
-  model = None
 
   # building model when obj is created
   def __init__(self):
@@ -188,26 +185,69 @@ class model_decoder():
     trainer_lib.set_random_seed(FLAGS.random_seed)
     usr_dir.import_usr_dir(FLAGS.t2t_usr_dir)
 
+    # parameter to keep estimator prediction open
+    self.close = False
+    self.message = "Hello world"
+
     # store hparam and model and keep it alive during running time
     self.hp = create_hparams()
     self.decode_hp = create_decode_hparams()
-    self.model = self.setModel()
+    self.estimator = trainer_lib.create_estimator(FLAGS.model, 
+                                              self.hp, 
+                                              t2t_trainer.create_run_config(self.hp), 
+                                              decode_hparams = self.decode_hp, 
+                                              use_tpu = FLAGS.use_tpu)
+
     # we dont support TPU in here
-    if self.model.config.use_tpu:
+    if self.estimator.config.use_tpu:
       raise ValueError("TPU is not support in here.")
-
-  # method setting model decode for loading
-  def setModel(self):
-    return trainer_lib.create_estimator(FLAGS.model, 
-                                        self.hp,
-                                        t2t_trainer.create_run_config(self.hp), 
-                                        decode_hparams = self.decode_hp, 
-                                        use_tpu = FLAGS.use_tpu)
-
+    
+    # loading model and set state to wait
+    input_fn = lambda: self.input_fn(self.hp, self.decode_hp)
+    self.predict = self.estimator.predict(input_fn, checkpoint_path = FLAGS.checkpoint_path)
   
+  def getMessage(self,Message):
+    self.message = Message
+    result = next(self.predict)
+    targets_vocab = self.hp.problem_hparams.vocabulary["targets"]
+    ouputMess = targets_vocab.decode(_save_until_eos(result["outputs"], False))
+    tf.logging.info(ouputMess)
+    return ouputMess
+  
+  def closeModel(self):
+    self.close = True
 
+  def input_fn(self, hparams, decode_hp):
+    gen_fn = make_input_fn_from_generator(
+      self._takeValue_fn(hparams, decode_hp)
+    )
+    example = gen_fn()
+    example = _interactive_input_tensor_to_features_dict(example,hparams)
+    return example
 
-
+  def _takeValue_fn(self, hparams, decode_hp):
+    num_samples = decode_hp.num_samples if decode_hp.num_samples > 0 else 1
+    decode_length = decode_hp.extra_length
+    p_hparams = hparams.problem_hparams
+    has_input = "inputs" in p_hparams.modality
+    vocabulary = p_hparams.vocabulary["inputs" if has_input else "targets"]
+    # This should be longer than the longest input.
+    const_array_size = 10000
+    while not self.close:
+      # recieve messeage need to be translated
+      input_string = self.message
+      # translate message to end decode
+      input_ids = vocabulary.encode(input_string)
+      if has_input:
+        input_ids.append(text_encoder.EOS_ID)
+      x = [num_samples, decode_length, len(input_ids)] + input_ids
+      assert len(x) < const_array_size
+      x += [0] * (const_array_size - len(x))
+      features = {"inputs": np.array(x).astype(np.int32),}
+      for k, v in six.iteritems(
+            problem_lib.problem_hparams_to_features(p_hparams)):
+          features[k] = np.array(v).astype(np.int32)
+      yield features
 
 
 
@@ -221,7 +261,14 @@ class model_decoder():
 
 def main(_):
   obj = model_decoder()
-  input("enter to continue")
+  while True:
+    message = input("enter text for testing [q = quit]:")
+    if (message == 'q'):
+      obj.closeModel()
+      obj.getMessage('Hello world')
+      break
+    print(obj.getMessage(message))
+  # decode_model()
 
 if __name__ == "__main__":
   tf.logging.set_verbosity(tf.logging.INFO)
