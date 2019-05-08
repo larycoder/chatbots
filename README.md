@@ -14,7 +14,7 @@ All of bot build tutorial I was mention [in here](https://github.com/larycoder/c
 ## Update translator for faster translate by keeping model onlive during time bot run
 If you already build your simple translate bot depend on my previous guilder. You will be easily relize that time for bot respond translate mess is supper slow
 
-**Reason** is
+**Reason**
 
 that t2t using estimator as model decoder, which indeep will reload data, model, grap, ..etc each time you call t2t_decoder. For some mastery reason, they who build-in estimator never create some more covinient version which try to keep model loading one time and run for each times decode. 
 
@@ -26,7 +26,7 @@ Now, I will not describe detail about my code (too **complicate** and lazy for m
 
 First, class name is model_decoder in [this file](https://github.com/larycoder/chatbots/blob/decode_Server/decode_server.py), in here, you must modify prefix paramet (right on the head of file) before using it for sure.
 
-Then you can call instant out on any program you want. Whenever you create instant of model_decoder, model of translator will be loaded and keep for living, then there are 2 function for working with this living model:
+Then you can call instance out on any program you want. Whenever you create instance of model_decoder, model of translator will be loaded and keep for living, then there are 2 function for working with this living model:
 
 **getMessage(string)**: send message to model and it will return translated string for you
 
