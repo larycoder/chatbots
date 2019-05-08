@@ -8,9 +8,14 @@ BotAsk = "No"
 Chat_id = None
 
 from telegram.ext import Updater,CommandHandler,MessageHandler,Filters
-from Translator import translatorAI
+from Translator import translatorAI as translator
+
+machine = None
+translatorAI = None
 
 def main():
+  # create AI for translating
+
   # Updater update from telegram and push it to Dispatcher
   updater = Updater(Token)
 
@@ -103,4 +108,7 @@ def sendMessage(bot,update):
   
 # Main runnning function
 if __name__ == '__main__':
+  machine = translator()
+  translatorAI = machine.getMessage
   main()
+  machine.close()
