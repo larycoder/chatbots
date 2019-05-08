@@ -1,23 +1,21 @@
-import sh
+import decode_server
 
-# Load decoder scipt of translation and execute
-def translatorAI(String):
-  # Open and write text need to translate
-  file = open("colab/en.txt","w")
-  file.write(String)
-  file.close()
+class translatorAI:
+  def __init__(self):
+    self.model = decode_server.model_decoder()
 
-  # Run decode
-  sh.sh("translate-script.sh")
+  def getMessage(self, string):
+    return self.model.getMessage(string)
 
-  # Read text after decode
-  file = open("colab/translation.txt","r")
-  output = file.read()
-  file.close()
-
-  # Return back to bot
-  return output
+  def close(self):
+    self.model.closeModel()
 
 
 if __name__ == '__main__':
-  translatorAI("Hello world")
+  foo = translatorAI()
+  while True:
+    mess = input('enter string to translate [q = quit]:')
+    if (mess == 'q'):
+      foo.close()
+      break
+    foo.getMessage(mess)
