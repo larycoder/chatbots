@@ -253,12 +253,6 @@ class model_decoder():
 
 
 
-
-
-
-
-
-
 def main(_):
   obj = model_decoder()
   while True:
