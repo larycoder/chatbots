@@ -34,7 +34,7 @@ Then you can call instance out on any program you want. Whenever you create inst
 
 **OK** that all, what do you want to do with it is depend on you. But for me, I wrap it into my chatbot, you can clone it down then run.
 
-For the process to run it, you may want to read again my [previous version](https://github.com/larycoder/chatbots/blob/master/README.md) but dont need to modify any file, just need to push data for decoder as mention an token of chatBot on right file then run.
+For the process to run it, you may want to read again my [previous version](https://github.com/larycoder/chatbots/blob/master/README.md) but dont need to modify any file except decode_server.py, just need to set prefix as mention and add token of chatBot on right file then run.
 
 This is only a part of more huge project and final purpose of project is can insert punctuation to text. So we try to modify translator model of t2t to reach our target. If you have some interesting in it, feel free to see more in [here](https://github.com/linhhonblade/try-tensor2tensor/tree/master/custom_data)...
 
