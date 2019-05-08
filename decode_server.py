@@ -27,9 +27,6 @@ Model = "transformer"
 hparams_set = "transformer_base"
 output_dir = "colab/train"
 decode_hparams = "beam_size=4,alpha=0.6"
-message_dir = "colab/en.txt" # file where serving model will read translate needed message
-input_string = "" # do not modify this value
-State_of_model = "" # do not modify this value
 
 import os
 import collections
@@ -76,105 +73,6 @@ FLAGS.model = Model
 create_hparams = t2t_decoder.create_hparams
 create_decode_hparams = t2t_decoder.create_decode_hparams
 
-
-def decode(estimator, hparams, decode_hp):
-  if estimator.config.use_tpu:
-    raise ValueError("TPU can only decode from dataset.")
-  usr_define_decode_from_file(estimator, hparams, decode_hp, checkpoint_path=FLAGS.checkpoint_path)
-
-
-# function for real decoding of user define
-def usr_define_decode_from_file(estimator, hparams, decode_hp, checkpoint_path=None):
-
-  def _takeValueFromFile_input_fn(hparams, decode_hp):
-    num_samples = decode_hp.num_samples if decode_hp.num_samples > 0 else 1
-    decode_length = decode_hp.extra_length
-    p_hparams = hparams.problem_hparams
-    has_input = "inputs" in p_hparams.modality
-    vocabulary = p_hparams.vocabulary["inputs" if has_input else "targets"]
-    # This should be longer than the longest input.
-    const_array_size = 10000
-
-    # read file for translate
-    input_string = ""
-    while True:
-      try:
-        while True:
-          file = open(message_dir,"r")
-          State_of_model = file.readline()
-          if (State_of_model == "true\n"):
-            input_string = file.readline()
-            file.close()
-            break
-          elif (State_of_model == "false\n"):
-            file.close()
-            return
-          file.close()
-          print("checking code running: ",State_of_model)
-          time.sleep(2)
-      except Exception:
-        pass
-
-      input_ids = vocabulary.encode(input_string)
-      if has_input:
-        input_ids.append(text_encoder.EOS_ID)
-      x = [num_samples, decode_length, len(input_ids)] + input_ids
-      assert len(x) < const_array_size
-      x += [0] * (const_array_size - len(x))
-      features = {
-          "inputs": np.array(x).astype(np.int32),
-      }
-
-      for k, v in six.iteritems(
-            problem_lib.problem_hparams_to_features(p_hparams)):
-          features[k] = np.array(v).astype(np.int32)
-      yield features
-
-  is_image = "image" in hparams.problem.name
-  is_text2class = isinstance(hparams.problem, text_problems.Text2ClassProblem)
-  skip_eos_postprocess = (is_image or is_text2class or decode_hp.skip_eos_postprocess)
-
-
-  def input_fn():
-    gen_fn = make_input_fn_from_generator(
-      _takeValueFromFile_input_fn(hparams,decode_hp))
-    example = gen_fn()
-    example = _interactive_input_tensor_to_features_dict(example, hparams)
-    return example
-
-  result_iter = estimator.predict(input_fn, checkpoint_path=checkpoint_path)
-  for result in result_iter:
-    targets_vocab = hparams.problem_hparams.vocabulary["targets"]
-    if decode_hp.identity_output:
-      tf.logging.info(" ".join(map(str, result["outputs"].flatten())))
-    else:
-      translated_word = targets_vocab.decode(_save_until_eos(result["outputs"], skip_eos_postprocess))
-      tf.logging.info(translated_word)
-      try:
-        file = open("colab/en.txt","w")
-        file.write("OK\n"+translated_word)
-        file.close()
-      except Exception:
-        pass
-
-
-
-def decode_model():
-  tf.logging.set_verbosity(tf.logging.INFO)
-  trainer_lib.set_random_seed(FLAGS.random_seed)
-  usr_dir.import_usr_dir(FLAGS.t2t_usr_dir)
-
-  hp = create_hparams()
-  decode_hp = create_decode_hparams()
-  
-  estimator = trainer_lib.create_estimator(
-    FLAGS.model,
-    hp,
-    t2t_trainer.create_run_config(hp),
-    decode_hparams=decode_hp,
-    use_tpu=FLAGS.use_tpu)
-  usr_define_decode_from_file(estimator, hp, decode_hp)
-
 # model decoder object: keeping model and decode message of user as fast as possible
 class model_decoder():
 
@@ -205,6 +103,7 @@ class model_decoder():
     # loading model and set state to wait
     input_fn = lambda: self.input_fn(self.hp, self.decode_hp)
     self.predict = self.estimator.predict(input_fn, checkpoint_path = FLAGS.checkpoint_path)
+    self.getMessage('hello world')
   
   def getMessage(self,Message):
     self.message = Message
@@ -216,6 +115,7 @@ class model_decoder():
   
   def closeModel(self):
     self.close = True
+    self.getMessage("hello world")
 
   def input_fn(self, hparams, decode_hp):
     gen_fn = make_input_fn_from_generator(
@@ -259,7 +159,6 @@ def main(_):
     message = input("enter text for testing [q = quit]:")
     if (message == 'q'):
       obj.closeModel()
-      obj.getMessage('Hello world')
       break
     print(obj.getMessage(message))
   # decode_model()
